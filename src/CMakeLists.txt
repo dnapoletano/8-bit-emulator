@@ -1,0 +1,17 @@
+add_compile_options(${myCOMPILE_FLAGS})
+AUX_SOURCE_DIRECTORY("${PROJECT_SOURCE_DIR}/src" source)
+include_directories ("${PROJECT_SOURCE_DIR}/include")
+# if(${MPI_CXX_FOUND})
+#   include_directories( "${MPI_CXX_INCLUDE_PATH}")
+#   link_libraries( "${MPI_CXX_LIBRARIES}")
+# # if(${OpenMP_CXX_FOUND})
+# #   include_directories( "${OpenMP_CXX_INCLUDE_DIRS}")
+# #   add_compile_options("${OpenMP_CXX_FLAGS}")
+# #   link_libraries( "${OpenMP_CXX_LIBRARIES}")
+# endif()
+# include_directories ("${YAML_PREFIX}/include")
+# link_directories ("${YAML_PREFIX}/lib")
+
+# link_libraries(yaml-cpp)
+
+add_executable(${PROJECT_NAME} ${source})
