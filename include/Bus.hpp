@@ -1,7 +1,9 @@
 #ifndef EIGHTBIT_EMULATOR_BUS_HPP
 #define EIGHTBIT_EMULATOR_BUS_HPP
 
-class Bus
+#include <cstdint>
+
+    class Bus
 {
   private:
   public:
