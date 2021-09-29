@@ -11,7 +11,7 @@
  *  respond to addresses put on the BUS (RAM essentially).
  *  For the time being we assume that only RAM is connected to the
  *  BUS, with the full 64kB of accessible memory.
- *  
+ *
  * Inside the 6502 we have:
  * - A-Accumulator (8-bit)
  * - X-Register (8-bit)
@@ -27,7 +27,7 @@
  *    - Bit2: Interrupt Request Disable,       1 = Disable
  *    - Bit1: Zero,                            1 = Result equaled Zero
  *    - Bit0: Carry Flag                       1 = True
- *    
+ *
  */
 
 class CPU
@@ -62,6 +62,9 @@ class CPU
     void Reset();
     void InterruptRequest();
     void NonMaskableInterruptRequest();
+
+    uint8_t Read(uint16_t Address);
+    void Write(uint16_t Address, uint8_t Data);
 
   private: /// Addressing modes
     uint8_t IMP();  uint8_t REL();
