@@ -72,7 +72,14 @@ uint8_t CPU::ZPY()
 uint8_t CPU::REL()
 {
   RelativeAddress = Read(ProgramCounter++);
-
+  /// if the 7-th bit of Relative Address is set
+  /// (the relative address is a negative number), I construct
+  /// a 16 bit number with all bits of the high byte set, such
+  /// that arithmetics works out when summing this with the PC.
+  if(RelativeAddress & 0x80){
+    RelativeAddress |= 0xFF00;
+  }
+  return 0;
 }
 
 uint8_t CPU::ABY()
