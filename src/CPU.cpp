@@ -82,35 +82,102 @@ uint8_t CPU::REL()
   return 0;
 }
 
-uint8_t CPU::ABY()
-{
-
-}
-
+/// Absolute: load a full 16bit address and use it
 uint8_t CPU::ABS()
 {
-
+  /// little-endian, so read low byte first
+  uint8_t low {Read(ProgramCounter++)};
+  uint8_t hi  {Read(ProgramCounter++)};
+  /// push the high byte to the left and combine with low byte.
+  AbsoluteAddress = (hi << 8) | low;
+  return 0;
 }
 
+/// Absolute with X-Offset
 uint8_t CPU::ABX()
 {
+  /// little-endian, so read low byte first
+  uint8_t low {Read(ProgramCounter++)};
+  uint8_t hi  {Read(ProgramCounter++)};
+  /// push the high byte to the left and combine with low byte.
+  AbsoluteAddress = (hi << 8) | low;
+  AbsoluteAddress += XRegister;
+  /// candidate for incrementing the clock cycles if address crosses
+  /// the page boundary: to check this we check that the high part
+  /// of the address, which we get by masking it with 0xFF00, must be equal
+  /// to the high byte which determines the page
+  if((AbsoluteAddress & 0xFF00) != (hi << 8)){
+    return 1;
+  }
 
+  return 0;
 }
 
+uint8_t CPU::ABY()
+{
+  uint8_t low {Read(ProgramCounter++)};
+  uint8_t hi  {Read(ProgramCounter++)};
+  /// push the high byte to the left and combine with low byte.
+  AbsoluteAddress = (hi << 8) | low;
+  AbsoluteAddress += YRegister;
+  /// candidate for incrementing the clock cycles if address crosses
+  /// the page boundary: to check this we check that the high part
+  /// of the address, which we get by masking it with 0xFF00, must be equal
+  /// to the high byte which determines the page
+  if((AbsoluteAddress & 0xFF00) != (hi << 8)){
+    return 1;
+  }
+  return 0;
+}
+
+/// Indirect modes, this is the implementation
+/// of pointers, there is a bug in the hardware which need however
+/// to be emulated. If the low byte of the
+/// supplied address is 0xFF, then to read the high byte of the actual address
+/// we need to cross a page boundary. This doesnt actually work on the chip as
+/// designed, instead it wraps back around in the same page, yielding an
+/// invalid actual address
+uint8_t CPU::IND()
+{
+  uint16_t PointerLow  {Read(ProgramCounter++)};
+  uint16_t PointerHigh {Read(ProgramCounter++)};
+  uint16_t Pointer = (PointerHigh << 8 )| PointerLow;
+  /// Bug:
+  if(PointerLow & 0x00FF){
+    AbsoluteAddress = (Read((Pointer & 0x00FF ))<< 8)
+      | Read(Pointer + 0);
+  } else { /// Normal behaviour
+    AbsoluteAddress = Read(Pointer + 1) << 8 | Read(Pointer + 0);
+  }
+  return 0;
+}
+/// Address Mode: Indirect X
+/// The supplied 8-bit address is offset by X Register to index
+/// a location in page 0x00. The actual 16-bit address is read
+/// from this location
 uint8_t CPU::IZX()
 {
-
+  uint16_t temp {Read(ProgramCounter++)};
+  /// Now read the address from the given address
+  uint16_t ByteLow {Read((temp + (uint16_t) XRegister) & 0x00FF)};
+  uint16_t ByteHi {Read((temp + (uint16_t) XRegister + 1) & 0x00FF)};
+  AbsoluteAddress = (ByteHi << 8) | ByteLow;
+  return 0;
 }
 
 uint8_t CPU::IZY()
 {
-
+  uint16_t temp {Read(ProgramCounter++)};
+  /// Now read the address from the given address
+  uint16_t ByteLow {Read(temp & 0x00FF)};
+  uint16_t ByteHi {Read((temp + 1) & 0x00FF)};
+  AbsoluteAddress = ((ByteHi << 8) | ByteLow) + YRegister;
+  if((AbsoluteAddress & 0x00FF) != (ByteHi << 8)){
+    return 1;
+  }
+  return 0;
 }
 
-uint8_t CPU::IND()
-{
-
-}
 
 uint8_t CPU::ADC()
 {
@@ -420,4 +487,13 @@ uint8_t CPU::Read(uint16_t Address)
 void CPU::Write(uint16_t Address, uint8_t Data)
 {
 
+}
+
+uint8_t CPU::FetchData()
+{
+  /// Lookup mode implied doesn't need to read from address
+  if(!( Lookup[OpCode].AddressMode == &CPU::IMP)){
+    Fetched = Read(AbsoluteAddress);
+  }
+  return Fetched;
 }

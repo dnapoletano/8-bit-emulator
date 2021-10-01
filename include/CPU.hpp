@@ -2,6 +2,8 @@
 #define EIGHTBIT_EMULATOR_CPU_HPP
 
 #include <cstdint>
+#include <string>
+#include <vector>
 /** 6502 model:
  *  This CPU has 16-bit address and 8-bit data.
  *  Thus, the full addressable memory range is $0000 - $FFFF (64kB).
@@ -96,6 +98,15 @@ class CPU
   public:
     CPU();
     ~CPU();
+
+    struct Instruction {
+      std::string name;
+      uint8_t (CPU::*OperationCode)(void)     = nullptr;
+      uint8_t (CPU::*AddressMode)(void)       = nullptr;
+      uint8_t Cycles = 0;
+    };
+
+    std::vector<Instruction> Lookup;
 };
 
 #endif
