@@ -1,13 +1,27 @@
 cmake_minimum_required(VERSION 3.0)
-project(MolecularDynamics LANGUAGES CXX)
+project(6502Emulator LANGUAGES CXX)
 set(CMAKE_MAKE_PROGRAM "Makefile")
 
 message("------------ 6502 Emulator --------------")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "-g")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+find_package(SDL2 REQUIRED)
+if(SDL2_FOUND)
+  message(STATUS "SDL found")
+endif()
 
+find_package(OpenGL REQUIRED)
+if(OPENGL_FOUND)
+  message(STATUS "OpenGL found")
+endif()
+
+find_package(GLUT REQUIRED)
+if(GLUT_FOUND)
+  message(STATUS "GLUT found")
+endif()
 
 # find_package(Yaml-cpp REQUIRED)
 

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 /** 6502 model:
  *  This CPU has 16-bit address and 8-bit data.
  *  Thus, the full addressable memory range is $0000 - $FFFF (64kB).
@@ -31,82 +32,91 @@
  *    - Bit0: Carry Flag                       1 = True
  *
  */
-
+class Bus;
 class CPU
 {
-  private:
-    uint8_t Accumulator;
-    uint8_t XRegister;
-    uint8_t YRegister;
-    uint8_t StackPointer;
-    uint16_t ProgramCounter;
-    uint8_t StatusRegister;
-    enum Flags6502{
-      Carry       = (1 << 0),
-      Zero        = (1 << 1),
-      IRQ         = (1 << 2),
-      DecimalMode = (1 << 3),
-      Break       = (1 << 4),
-      Unused      = (1 << 5),
-      OverFlow    = (1 << 6),
-      Negative    = (1 << 7),
-    };
+private:
+  Bus * _Bus;
+public:
+  uint8_t Accumulator;
+  uint8_t XRegister;
+  uint8_t YRegister;
+  uint8_t StackPointer;
+  uint16_t ProgramCounter;
+  uint8_t StatusRegister;
+  enum Flags6502{
+    Carry       = (1 << 0),
+    Zero        = (1 << 1),
+    IRQ         = (1 << 2),
+    DecimalMode = (1 << 3),
+    Break       = (1 << 4),
+    Unused      = (1 << 5),
+    OverFlow    = (1 << 6),
+    Negative    = (1 << 7),
+  };
+private:
+  uint8_t FetchData();
+  uint8_t Fetched;
+  uint16_t AbsoluteAddress;
+  uint16_t RelativeAddress;
+  uint8_t OpCode;
+  uint8_t Cycles;
+  uint32_t ClockCount;
 
-    uint8_t FetchData();
-    uint8_t Fetched;
-    uint16_t AbsoluteAddress;
-    uint16_t RelativeAddress;
-    uint8_t OpCode;
-    uint8_t Cycles;
-    uint32_t ClockCount;
+  uint8_t GetFlag(Flags6502 f);
+  void SetFlag(Flags6502 f, bool v);
 
-    void Clock();
-    void Reset();
-    void InterruptRequest();
-    void NonMaskableInterruptRequest();
+  uint8_t Read(uint16_t Address);
+  void Write(uint16_t Address, uint8_t Data);
 
-    uint8_t Read(uint16_t Address);
-    void Write(uint16_t Address, uint8_t Data);
+private: /// Addressing modes
+  uint8_t IMP();  uint8_t REL();
+  uint8_t IMM();  uint8_t ABY();
+  uint8_t ABS();  uint8_t ABX();
+  uint8_t ZP0();  uint8_t IZX();
+  uint8_t ZPX();  uint8_t IZY();
+  uint8_t ZPY();  uint8_t IND();
 
-  private: /// Addressing modes
-    uint8_t IMP();  uint8_t REL();
-    uint8_t IMM();  uint8_t ABY();
-    uint8_t ABS();  uint8_t ABX();
-    uint8_t ZP0();  uint8_t IZX();
-    uint8_t ZPX();  uint8_t IZY();
-    uint8_t ZPY();  uint8_t IND();
+private: /// Op-Codes
+  uint8_t ADC(); uint8_t AND();	uint8_t ASL();	uint8_t BCC();
+  uint8_t BCS(); uint8_t BEQ();	uint8_t BIT();	uint8_t BMI();
+  uint8_t BNE(); uint8_t BPL();	uint8_t BRK();	uint8_t BVC();
+  uint8_t BVS(); uint8_t CLC();	uint8_t CLD();	uint8_t CLI();
+  uint8_t CLV(); uint8_t CMP();	uint8_t CPX();	uint8_t CPY();
+  uint8_t DEC(); uint8_t DEX();	uint8_t DEY();	uint8_t EOR();
+  uint8_t INC(); uint8_t INX();	uint8_t INY();	uint8_t JMP();
+  uint8_t JSR(); uint8_t LDA();	uint8_t LDX();	uint8_t LDY();
+  uint8_t LSR(); uint8_t NOP();	uint8_t ORA();	uint8_t PHA();
+  uint8_t PHP(); uint8_t PLA();	uint8_t PLP();	uint8_t ROL();
+  uint8_t ROR(); uint8_t RTI();	uint8_t RTS();	uint8_t SBC();
+  uint8_t SEC(); uint8_t SED();	uint8_t SEI();	uint8_t STA();
+  uint8_t STX(); uint8_t STY();	uint8_t TAX();	uint8_t TAY();
+  uint8_t TSX(); uint8_t TXA();	uint8_t TXS();	uint8_t TYA();
 
-  private: /// Op-Codes
-	  uint8_t ADC(); uint8_t AND();	uint8_t ASL();	uint8_t BCC();
-	  uint8_t BCS(); uint8_t BEQ();	uint8_t BIT();	uint8_t BMI();
-	  uint8_t BNE(); uint8_t BPL();	uint8_t BRK();	uint8_t BVC();
-	  uint8_t BVS(); uint8_t CLC();	uint8_t CLD();	uint8_t CLI();
-	  uint8_t CLV(); uint8_t CMP();	uint8_t CPX();	uint8_t CPY();
-	  uint8_t DEC(); uint8_t DEX();	uint8_t DEY();	uint8_t EOR();
-	  uint8_t INC(); uint8_t INX();	uint8_t INY();	uint8_t JMP();
-	  uint8_t JSR(); uint8_t LDA();	uint8_t LDX();	uint8_t LDY();
-	  uint8_t LSR(); uint8_t NOP();	uint8_t ORA();	uint8_t PHA();
-	  uint8_t PHP(); uint8_t PLA();	uint8_t PLP();	uint8_t ROL();
-	  uint8_t ROR(); uint8_t RTI();	uint8_t RTS();	uint8_t SBC();
-	  uint8_t SEC(); uint8_t SED();	uint8_t SEI();	uint8_t STA();
-	  uint8_t STX(); uint8_t STY();	uint8_t TAX();	uint8_t TAY();
-	  uint8_t TSX(); uint8_t TXA();	uint8_t TXS();	uint8_t TYA();
+  /// "unofficial" opcodes
+  uint8_t XXX();
 
-	  /// "unofficial" opcodes
-	  uint8_t XXX();
+public:
+  CPU();
+  ~CPU();
 
-  public:
-    CPU();
-    ~CPU();
+  struct Instruction {
+    std::string name;
+    uint8_t (CPU::*OperationCode)(void)     = nullptr;
+    uint8_t (CPU::*AddressMode)(void)       = nullptr;
+    uint8_t Cycles = 0;
+  };
 
-    struct Instruction {
-      std::string name;
-      uint8_t (CPU::*OperationCode)(void)     = nullptr;
-      uint8_t (CPU::*AddressMode)(void)       = nullptr;
-      uint8_t Cycles = 0;
-    };
+  std::vector<Instruction> Lookup;
+  inline void ConnectBus(Bus * bus) {_Bus = bus;}
 
-    std::vector<Instruction> Lookup;
+  void Clock();
+  void Reset();
+  void InterruptRequest();
+  void NonMaskableInterruptRequest();
+  inline bool Completed() {return Cycles == 0;}
+  void ShowStatus();
+  std::map<uint16_t, std::string> Disassemble(uint16_t nStart, uint16_t nStop);
 };
 
 #endif
